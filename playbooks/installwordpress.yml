@@ -51,18 +51,18 @@
      state: directory
      mode: '0755'
      recurse: yes
-#    become: yes
-#    file:
-      path: /var/www/html/wordpress/wp-content/
-      state: directory
-      mode: '0755'
-      recurse: yes
-#    become: yes
-#    file:
-     path: /var/www/html/wordpress/wp-content/uploads/
-     state: directory
-     mode: '0775'
-     recurse: yes
+     #     become: yes
+     #     file:
+     #    path: /var/www/html/wordpress/wp-content/
+     #    state: directory
+     #    mode: '0755'
+     #    recurse: yes
+     #     become: yes
+     #     file:
+     #     path: /var/www/html/wordpress/wp-content/uploads/
+     #     state: directory
+     #     mode: '0775'
+     #     recurse: yes
 
   - name: Actualizar configuración de Apache y reiniciar servicio
     become: yes
@@ -70,7 +70,9 @@
      src: /etc/ansible/recursos/wp-config.php
      dest: /etc/httpd/conf.d/wordpress.conf
      mode: '0644'
-    notify: restart apache
+#     service:
+#             name: httpd
+#             state: restart
 
   - name: Instalar módulos de PHP requeridos
     yum:
@@ -82,4 +84,11 @@
       - php-xml
       - php-mbstring
       - php-json
+      - php-bcmath
+      - php-curl
      state: present
+
+  - name: Reiniciar apache
+    service: 
+     name: httpd
+     state: restarted
