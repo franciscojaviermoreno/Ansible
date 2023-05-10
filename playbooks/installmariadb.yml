@@ -1,0 +1,46 @@
+---
+- name: Instalar y configurar MariaDB
+  hosts: mariadb
+  become: true
+
+  tasks:
+  - name: Actualizar repositorios
+    dnf: 
+     update_cache: yes
+
+  - name: Instalar MariaDB
+    yum:
+     name: mariadb-server
+     state: present
+
+  - name: Reiniciar el servicio de MariaDB
+    service:
+     name: mariadb
+     state: restarted
+
+  - name: Instalar Python
+    yum:
+     name: python3
+     state: present
+
+  - name: Asegurarse de que pymysql esta disponible
+    pip:
+     name: pymysql
+     state: present
+
+  - name: Crear base de datos WordPress
+    mysql_db:
+     name: bdwordpress
+     state: present
+     login_user: root
+     login_password: vagrant
+
+  - name: Crear usuario para WordPress
+    mysql_user:
+     name: wordpress
+     password: 1234
+     login_user: root
+     login_password: vagrant
+     priv: 'bdwordpress.*:ALL'
+     state: present
+

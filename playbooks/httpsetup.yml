@@ -1,0 +1,26 @@
+---
+- name: Establecer el httpd y abrir el puerto del firewall
+  hosts: apache
+
+  tasks:
+  - name: Instalar paquete apache
+    yum:
+     name: httpd
+     state: present
+
+  - name: Iniciar httpd
+    service:
+     name: httpd
+     state: started
+
+  - name: Abrir puerto para servicio http
+    firewalld:
+     service: http
+     permanent: true
+     state: enabled
+
+  - name: Reiniciar servicio firewalld y cargar los cambios del firewall
+    service:
+     name: firewalld
+     state: reloaded
+   
