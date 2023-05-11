@@ -3,6 +3,12 @@
   hosts: apache
 
   tasks:
+
+  - name: Actualizar paquetes
+    package:
+     name: '*'
+     state: latest
+
   - name: Instalar paquete apache
     yum:
      name: httpd
