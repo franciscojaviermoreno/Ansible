@@ -1,6 +1,6 @@
 ---
 - name: Establecer el httpd y abrir el puerto del firewall
-  hosts: apache
+  hosts: wordpress
 
   tasks:
 
