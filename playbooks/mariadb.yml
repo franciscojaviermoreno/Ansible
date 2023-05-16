@@ -1,0 +1,63 @@
+---
+- name: Instalar y configurar MariaDB
+  hosts: mariadb
+  become: true
+
+  tasks:
+
+  - name: Actualizar caché de los repositorios
+    yum:
+        name: '*'
+        state: latest
+        update_cache: true
+
+  - name: Instalar MariaDB
+    yum:
+        name:
+                - mariadb-server
+                - python2
+                - python3
+                - python3-PyMySQL
+                - python3-mysql
+                - python2-PyMySQL
+        state: latest
+  
+  - name: Iniciar MariaDB
+    service:
+        name: mariadb
+        enabled: true
+        state: started
+      
+  - name: Crear base de datos para WordPress
+    mysql_db:
+        name: wordpress-bd
+        login_user: root
+        login_host: localhost
+        state: present
+
+  - name: Crear usuario para la base de datos
+    mysql_user:
+       name: wordpress-user
+       password: 1234
+       priv: 'wordpress-bd.*:ALL,GRANT'
+       host: '%'
+       state: present
+
+       # Activar los puertos
+      
+  - name: Habilitar el servicio mysql en firewalld
+    firewalld:
+            service: mysql
+            permanent: true
+            state: enabled
+
+  - name: Abrir el puerto 3306 en firewalld
+    firewalld:
+            port: 3306/tcp
+            permanent: true
+            state: enabled
+
+  - name: Recargar la configuración del firewall
+    systemd:
+            name: firewalld
+            state: restarted

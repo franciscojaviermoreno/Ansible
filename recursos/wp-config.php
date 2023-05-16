@@ -12,8 +12,8 @@
  */
 
 // Configuración de la base de datos
-define( 'DB_NAME', 'bdwordpress' );
-define( 'DB_USER', 'wordpress' );
+define( 'DB_NAME', 'wordpress-bd' );
+define( 'DB_USER', 'wordpress-user' );
 define( 'DB_PASSWORD', '1234' );
 define( 'DB_HOST', '192.168.10.62' );
 define( 'DB_CHARSET', 'utf8mb4' );
