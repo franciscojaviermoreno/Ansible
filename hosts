@@ -42,7 +42,7 @@
 
 ## db-[99:101]-node.example.com
 
-[apache]
+[httpd]
 192.168.10.60
 [wordpress]
 192.168.10.61

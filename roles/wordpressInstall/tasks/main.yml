@@ -1,0 +1,65 @@
+---
+# tasks file for wordpressInstall
+
+- name: Importar clave repositorios necesarios para php 8
+  rpm_key:
+        key: https://rpms.remirepo.net/RPM-GPG-KEY-remi2018
+        state: present
+
+- name: Habilitar repositorios
+  yum:
+          name: https://rpms.remirepo.net/enterprise/remi-release-8.rpm, https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+          state: present
+
+- name: Instalar paquetes requeridos
+  yum:
+          name: "{{ item  }}"
+          state: latest
+  loop: 
+        - php
+        - php-gd
+        - php-xml
+        - php-mbstring
+        - php-mysqli
+
+- name:  Resetear modulo PHP
+  shell: dnf module reset php -y
+
+- name: Instalar php 8
+  shell: dnf module install php:remi-8.0 -y
+
+- name: Copiar ficheros de WordPress
+  unarchive:
+          src: https://wordpress.org/latest.tar.gz
+          dest: /var/www/html/
+          remote_src: yes
+          owner: apache
+          group: apache
+          mode: '0755'
+
+- name: Establecer configuración WordPress
+  template:
+          src: /etc/ansible/recursos/wp-config.php
+          dest: /var/www/html/wordpress/wp-config.php
+          owner: apache
+          group: apache
+          mode: '0644'
+
+- name: Deshabilitar SeLinux
+  template:
+          src: /etc/ansible/recursos/config
+          dest: /etc/selinux/config
+          owner: root
+          group: root
+          mode: '0644'
+
+- name: Reiniciar servidor remoto
+  reboot:
+          reboot_timeout: 30
+          post_reboot_delay: 30
+
+- name: Iniciar http web server
+  service:
+          name: httpd
+          state: started
+

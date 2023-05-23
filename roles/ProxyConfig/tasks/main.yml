@@ -1,0 +1,30 @@
+---
+# tasks file for ProxyConfig
+
+- name: Configuración Proxy
+  template:
+          src: /etc/ansible/recursos/proxy.conf
+          dest: /etc/httpd/conf.d/proxy.conf
+          owner: root
+          group: root
+          mode: '0644'
+
+- name: Deshabilitar SeLinux
+  template:
+          src: /etc/ansible/recursos/config
+          dest: /etc/selinux/config
+          owner: root
+          group: root
+          mode: '0644'
+
+- name: Reiniciar servidor remoto
+  reboot:
+          reboot_timeout: 30
+          post_reboot_delay: 30
+
+- name: Iniciar httpd
+  service:
+          name: httpd
+          state: started
+
+        

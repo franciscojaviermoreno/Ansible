@@ -1,6 +1,6 @@
 ---
 - name: Instalar WordPress
-  hosts: 192.168.10.61
+  hosts: wordpress
   become: true
 
   tasks:

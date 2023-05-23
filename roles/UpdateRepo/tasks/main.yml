@@ -1,0 +1,9 @@
+---
+# tasks file for UpdateRepo
+
+- name: Actualizar repositorios
+  become: true
+  yum:
+          name: '*'
+          state: latest
+          update_cache: true

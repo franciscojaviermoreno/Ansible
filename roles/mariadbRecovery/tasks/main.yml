@@ -1,0 +1,39 @@
+---
+# tasks file for mariadbRecovery
+
+# Obtener una lista de los backups .sql que se encuentran en /backups
+
+- name: Obtener la lista de archivos .sql
+  find:
+          paths: /etc/ansible/recursos/backups
+          patterns: "*.sql"
+          file_type: file
+  register: sql_files
+  delegate_to: localhost
+
+- name: Ordenar la lista de archivos por fecha de modificación
+  set_fact:
+          sorted_sql_files: "{{ sql_files.files | sort(attribute='mtime') | reverse }}"
+
+- name: Seleccionar el ultimo archivo .sql
+  set_fact:
+          latest_sql_file: "{{ sorted_sql_files[0] }}"
+
+- name: Crear directorio backup
+  become: true
+  file:
+          path: /backup
+          state: directory
+
+- name: Copiar backup a servidor remoto
+  copy: 
+          content: "{{ lookup('file', latest_sql_file.path) }}"
+          dest: /backup/restore.sql
+
+- name: Restaurar base de datos
+  mysql_db:
+          login_user: wordpress-user
+          login_password: 1234
+          name: bdwordpress
+          state: import
+          target: /backup/restore.sql

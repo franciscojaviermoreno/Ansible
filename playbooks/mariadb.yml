@@ -27,10 +27,12 @@
         name: mariadb
         enabled: true
         state: started
-      
+
+  # Creación de base de datos y usuario para wordpress
+
   - name: Crear base de datos para WordPress
-    mysql_db:
-        name: wordpress-bd
+        mysql_db:
+        name: bdwordpress
         login_user: root
         login_host: localhost
         state: present
@@ -39,9 +41,48 @@
     mysql_user:
        name: wordpress-user
        password: 1234
-       priv: 'wordpress-bd.*:ALL,GRANT'
+       priv: 'bdwordpress.*:ALL,GRANT'
        host: '%'
        state: present
+
+# Obtener el archivo sql para recuperarlo
+
+  - name: Obtener la lista de archivos .sql
+    find:
+            paths: /etc/ansible/recursos/backups/
+            patterns: "*.sql"
+            file_type: file
+    register: sql_files
+    delegate_to: localhost
+
+  - name: Ordenar la lista de archivos por fecha de modificación
+    set_fact:
+     sorted_sql_files: "{{ sql_files.files | sort(attribute='mtime') | reverse }}"
+
+  - name: Seleccionar el último archivo .sql
+    set_fact:
+     latest_sql_file: "{{ sorted_sql_files[0] }}"
+
+  - name: Crear directorio backup
+    become: true
+    file:
+            path: /backup
+            state: directory
+
+  - name: Copiar backup a servidor remoto
+    copy:
+            content: "{{ lookup('file', latest_sql_file.path) }}"
+            dest: /backup/restore.sql
+            remote_src: yes
+
+
+  - name: Restaurar base de datos desde el backup
+    mysql_db:
+            login_user: wordpress-user
+            login_password: 1234
+            name: bdwordpress
+            state: import
+            target: /backup/restore.sql
 
        # Activar los puertos
       

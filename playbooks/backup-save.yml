@@ -1,0 +1,34 @@
+---
+- name: Crear copia de seguridad de la base de datos
+  hosts: mariadb
+  become: true
+       
+  tasks:
+   - name: Crear directorio de copias de seguridad
+     file:
+            path: /backup
+            state: directory
+            mode: '0755'
+
+   - name: Obtener fecha y hora actual
+     set_fact:
+          timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.time }}"
+                                                                                                
+   - name: Realizar copia de seguridad de la base de datos
+     mysql_db:
+             state: dump
+             name: bdwordpress
+             target: "/backup/wordpress-bd_backup_{{ timestamp }}.sql"
+
+   - name: Comprobar si se realizó correctamente la copia de seguridad
+     stat:
+        path: "/backup/wordpress-bd_backup_{{ timestamp }}.sql"
+     register: result
+                                                                                                                                                                            
+   - name: Copiar copia de seguridad al nodo de control
+     fetch:
+        src: "/backup/wordpress-bd_backup_{{ timestamp }}.sql"
+        dest: "/etc/ansible/recursos/backups/"
+        flat: yes
+     when: result is success
+

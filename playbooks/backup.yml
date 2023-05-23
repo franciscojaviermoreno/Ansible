@@ -1,0 +1,5 @@
+---
+- name: Realización de una copia de seguridad de la base de datos de Wordpress
+  hosts: mariadb
+  roles:
+          - mariadbBackup

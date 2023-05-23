@@ -1,0 +1,30 @@
+---
+# tasks file for httpInstall
+
+- name: Instalar http
+  yum:
+          name: httpd
+          state: present
+
+- name: Iniciar servicio httpd
+  service:
+          name: httpd
+          state: started
+
+- name: Abrir puerto para el servicio httpd
+  firewalld:
+          service: http
+          permanent: true
+          state: enabled
+
+- name: Reiniciar servicio firewalld y cargar los cambios
+  service:
+          name: firewalld
+          state: reloaded
+
+- name: Reiniciar httpd
+  service: 
+        name: httpd
+        state: restarted
+
+
