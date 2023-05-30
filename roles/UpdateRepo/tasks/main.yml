@@ -1,9 +1,17 @@
 ---
 # tasks file for UpdateRepo
 
-- name: Actualizar repositorios
+- name: Actualizar repositorios CentOS
   become: true
   yum:
           name: '*'
           state: latest
           update_cache: true
+  when: ansible_facts.distribution == "CentOS"
+
+- name: Actualizar repositorios Debian
+  become: true
+  apt:
+          upgrade: dist
+          update_cache: true
+  when: ansible_facts.distribution == "Debian"

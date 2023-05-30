@@ -1,30 +1,87 @@
 ---
-# tasks file for ProxyConfig
-
-- name: Configuración Proxy
+#                          Tarea para configurar una redirección al Proxy
+# 
+#
+#       <------------- ESTABLECER CONFIGURACIÓN DEL PROXY ---------------------->
+#
+- name: Establecer la configuración Proxy CentOS
   template:
-          src: /etc/ansible/recursos/proxy.conf
+          src: /etc/ansible/recursos/config-proxy/proxy-centos.conf
           dest: /etc/httpd/conf.d/proxy.conf
           owner: root
           group: root
           mode: '0644'
+  when: ansible_facts.distribution == "CentOS"
+
+- name: Establecer la configuración Proxy Debian
+  template:
+          src: /etc/ansible/recursos/config-proxy/proxy-debian.conf
+          dest: /etc/apache2/sites-available/proxy.conf
+          owner: root
+          group: root
+          mode: '0644'
+  when: ansible_facts.distribution == "Debian"
+
+#       <-------------------- HABILITAR MÓDULOS NECESARIOS PARA PROXY --------------->
+
+- name: Habilitar módulo proxy Debian
+  apache2_module:
+          name: proxy
+          state: present
+  when: ansible_facts.distribution == "Debian"
+
+- name: Habilitar módulo proxy_http Debian
+  apache2_module:
+          name: proxy_http
+          state: present
+  when: ansible_facts.distribution == "Debian"
+
+- name: Reiniciar Apache2
+  service:
+          name: apache2
+          state: restarted
+  when: ansible_facts.distribution == "Debian"
+
+#       <--------------------- HABILITAR CONFIGURACIÓN DEL PROXY -------------------->
+
+- name: Habilitar configuración del proxy
+  command: a2ensite proxy.conf
+  args:
+          chdir: /etc/apache2/sites-available/
+          creates: /etc/apache2/sites-enabled/proxy.conf
+  when: ansible_facts.distribution == "Debian"
+
+#       <---------------- DESHABILITAR SELINUX CENTOS --------------------------->
 
 - name: Deshabilitar SeLinux
   template:
-          src: /etc/ansible/recursos/config
+          src: /etc/ansible/recursos/config-SELinux/config
           dest: /etc/selinux/config
           owner: root
           group: root
           mode: '0644'
+  when: ansible_facts.distribution == "CentOS"
+
+#       <------------------ REINICIAR EQUIPO REMOTO ---------------------------->
 
 - name: Reiniciar servidor remoto
   reboot:
           reboot_timeout: 30
           post_reboot_delay: 30
+  when: ansible_facts.distribution == "CentOS"
+
+#       <----------------------- REINICIAR SERVICIO HTTP ---------------------------->
 
 - name: Iniciar httpd
   service:
           name: httpd
           state: started
+  when: ansible_facts.distribution == "CentOS"
+
+- name: Iniciar apache
+  service:
+          name: apache2
+          state: restarted
+  when: ansible_facts.distribution == "Debian"
 
         

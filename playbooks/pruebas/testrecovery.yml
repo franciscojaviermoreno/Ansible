@@ -1,0 +1,5 @@
+---
+- name: Prueba recovery
+  hosts: mariadb
+  roles:
+          - mariadbRecovery

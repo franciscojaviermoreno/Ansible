@@ -1,0 +1,6 @@
+---
+- name: Prueba proxy
+  hosts: http
+  roles:
+          - ProxyConfig
+

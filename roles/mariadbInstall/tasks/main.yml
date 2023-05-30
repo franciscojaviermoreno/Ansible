@@ -1,9 +1,9 @@
 ---
 # tasks file for mariadbInstall
 
-# Instalación de MariaDB
+# <------------------------ INSTALACIÓN MARIADB ----------------------->
 
-- name: Instalar MariaDB
+- name: Instalar MariaDB y módulos necesarios CentOS
   yum:
           name:
                   - mariadb-server
@@ -13,14 +13,42 @@
                   - python3-mysql
                   - python2-PyMySQL
           state: latest
+  when: ansible_facts.distribution == "CentOS"
+
+- name: Instalar MariaDB y módulos necesarios Debian
+  apt:
+          name:
+                  - mariadb-server
+                  - python3
+                  - python3-mysqldb
+                  - ufw
+          state: present
+  when: ansible_facts.distribution == "Debian"
 
 - name: Iniciar MariaDB
   service:
           name: mariadb
           enabled: true
           state: started
-          
-  # Creación de base de datos y usuario de WordPress
+ 
+# <--------------- IMPORTAR CONFIGURACIÓN A MARIADB DEBIAN ------------------------->
+
+- name: Establecer configuración Mariadb Debian
+  template:
+          src: /etc/ansible/recursos/config-mariadb/50-server-debian.cnf
+          dest: /etc/mysql/mariadb.conf.d/50-server.cnf
+          owner: root
+          group: root
+          mode: '0755'
+  when: ansible_facts.distribution == "Debian"
+
+- name: Reiniciar mariadb
+  service:
+          name: mariadb
+          enabled: true
+          state: restarted
+
+# <---------------- CREACIÓN BASE DE DATOS Y USUARIOS PARA WORDPRESS --------------->
 
 - name: Crear base de datos para Wordpress
   mysql_db:
@@ -37,23 +65,48 @@
           host: '%'
           state: present
 
-  # Habilitar puertos necesarios en firewall
+# <----------------- HABILITAR LOS PUERTOS NECESARIOS --------------------------->
 
-- name: Habilitar el servicio mysql en firewalld
+- name: Habilitar el servicio mysql en firewalld CentOS
   firewalld:
           service: mysql
           permanent: true
           state: enabled
+  when: ansible_facts.distribution == "CentOS"
 
-- name: Abrir el puerto 3306 en firewalld
+- name: Abrir el puerto 3306 en firewalld CentOS
   firewalld:
           port: 3306/tcp
           permanent: true
           state: enabled
+  when: ansible_facts.distribution == "CentOS"
 
-  # Reiniciar firewall
+- name: Habilitar UFW
+  ufw:
+          state: enabled
+  when: ansible_facts.distribution == "Debian"
+
+- name: Habilitar puerto 3306 ufw Debian
+  ufw:
+          rule: allow
+          port: "3306"
+  when: ansible_facts.distribution == "Debian"
+
+- name: Habilitar puerto 22 ufw Debian
+  ufw:
+          rule: allow
+          port: "22"
+  when: ansible_facts.distribution == "Debian"
+
+- name: Recargar ufw Debian
+  ufw:
+          state: reloaded
+  when: ansible_facts.distribution == "Debian"
+
+# <------------------- REINICIAR EL FIREWALL -------------------> 
 
 - name: Recargar la configuración del firewall
   systemd:
           name: firewalld
           state: restarted
+  when: ansible_facts.distribution == "CentOS"

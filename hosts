@@ -42,9 +42,29 @@
 
 ## db-[99:101]-node.example.com
 
-[httpd]
+[update]
+
+centosclient1 ansible_host=192.168.10.60
+
+centosclient2 ansible_host=192.168.10.61
+
+centosclient3 ansible_host=192.168.10.62
+
+debianclient1 ansible_host=192.168.10.70
+
+debianclient2 ansible_host=192.168.10.71
+
+debianclient3 ansible_host=192.168.10.72
+
+[http]
 192.168.10.60
+192.168.10.70
+
 [wordpress]
 192.168.10.61
+192.168.10.71
+
 [mariadb]
 192.168.10.62
+192.168.10.72
+

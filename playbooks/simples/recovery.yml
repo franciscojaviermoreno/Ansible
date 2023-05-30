@@ -1,0 +1,5 @@
+---
+- name: Restaurar backup en la base de datos
+  hosts: mariadb
+  roles:
+          - mariadbRecovery

@@ -1,0 +1,6 @@
+---
+- name: Prueba http
+  hosts: mariadb
+  roles:
+          - mariadbInstall
+

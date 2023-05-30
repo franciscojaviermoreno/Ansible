@@ -1,0 +1,6 @@
+---
+- name: Prueba http
+  hosts: http
+  roles:
+          - httpInstall
+

@@ -1,0 +1,6 @@
+---
+- name: Prueba crear backup
+  hosts: mariadb
+  roles:
+          - mariadbBackup
+

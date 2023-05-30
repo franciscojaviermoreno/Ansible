@@ -1,15 +1,23 @@
 ---
-# tasks file for wordpressInstall
+#               Tareas para la instalación y configuración de Wordpress
+#
+#       <--------------- IMPORTAR CLAVES REPOSITORIOS DE PHP 8 ------------------------>
 
 - name: Importar clave repositorios necesarios para php 8
   rpm_key:
         key: https://rpms.remirepo.net/RPM-GPG-KEY-remi2018
         state: present
+  when: ansible_facts.distribution == "CentOS"
+
+#       <-------------- HABILITAR REPOSITORIOS NECESARIOS PARA PHP 8 ----------------->
 
 - name: Habilitar repositorios
   yum:
           name: https://rpms.remirepo.net/enterprise/remi-release-8.rpm, https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
           state: present
+  when: ansible_facts.distribution == "CentOS"
+
+#       <-------------- INSTALAR PAQUETES NECESARIOS PARA WORDPRESS -------------------->
 
 - name: Instalar paquetes requeridos
   yum:
@@ -21,14 +29,36 @@
         - php-xml
         - php-mbstring
         - php-mysqli
+  when: ansible_facts.distribution == "CentOS"
+
+- name: Instalar paquetes requeridos
+  apt:
+          name: "{{ item  }}"
+          state: latest
+  loop:
+        - php
+        - php-gd
+        - php-xml
+        - php-mbstring
+        - php-mysql
+  when: ansible_facts.distribution == "Debian"
+
+
+#       <-------------------------- RESETEAR MODULO PHP ----------------------------------->
 
 - name:  Resetear modulo PHP
   shell: dnf module reset php -y
+  when: ansible_facts.distribution == "CentOS"
+
+#       <---------------------------------- INSTALAR PHP 8 --------------------------------->
 
 - name: Instalar php 8
   shell: dnf module install php:remi-8.0 -y
+  when: ansible_facts.distribution == "CentOS"
 
-- name: Copiar ficheros de WordPress
+#       <--------------------------------- DESCARGAR WORDPRESS ----------------------------->
+
+- name: Descargar y descomprimir WordPress para CentOS
   unarchive:
           src: https://wordpress.org/latest.tar.gz
           dest: /var/www/html/
@@ -36,30 +66,76 @@
           owner: apache
           group: apache
           mode: '0755'
+  when: ansible_facts.distribution == "CentOS"
 
-- name: Establecer configuración WordPress
+- name: Descargar archivo de WordPress Debian
+  get_url:
+          url: "https://wordpress.org/latest.tar.gz"
+          dest: "/tmp/wordpress.tar.gz"
+  when: ansible_facts.distribution == "Debian"
+
+#       <----------------------------- DESCOMPRIMIR WORDPRESS ------------------------------>
+
+- name: Extraer archivo de WordPress Debian
+  unarchive:
+          src: "/tmp/wordpress.tar.gz"
+          dest: "/var/www/html/"
+          remote_src: yes
+          owner: www-data
+          group: www-data
+          mode: '0755'
+  when: ansible_facts.distribution == "Debian"
+
+
+#       <------------------------- IMPORTAR CONFIGURACIÓN WORDPRESS ------------------------->
+
+- name: Establecer configuración WordPress CentOS
   template:
-          src: /etc/ansible/recursos/wp-config.php
+          src: /etc/ansible/recursos/config-wordpress/wp-config-centos.php
           dest: /var/www/html/wordpress/wp-config.php
           owner: apache
           group: apache
           mode: '0644'
+  when: ansible_facts.distribution == "CentOS"
+
+- name: Establecer configuración WordPress Debian
+  template:
+          src: /etc/ansible/recursos/config-wordpress/wp-config-debian.php
+          dest: /var/www/html/wordpress/wp-config.php
+          owner: www-data
+          group: www-data
+          mode: '0755'
+  when: ansible_facts.distribution == "Debian"
+
+#       <---------------------------- DESHABILITAR SELINUX ---------------------------------->
 
 - name: Deshabilitar SeLinux
   template:
-          src: /etc/ansible/recursos/config
+          src: /etc/ansible/recursos/config-SELinux/config
           dest: /etc/selinux/config
           owner: root
           group: root
           mode: '0644'
+  when: ansible_facts.distribution == "CentOS"
+
+#       <------------------------------ REINICIAR SERVIDOR REMOTO ----------------------------->
 
 - name: Reiniciar servidor remoto
   reboot:
           reboot_timeout: 30
           post_reboot_delay: 30
 
+#       <------------------------------ INICIAR SERVICIO HTTP -------------------------------->
+
 - name: Iniciar http web server
   service:
           name: httpd
           state: started
+  when: ansible_facts.distribution == "CentOS"
 
+- name: Reiniciar apache en Debian
+  become: yes
+  service:
+         name: apache2
+         state: restarted
+  when: ansible_facts.distribution == "Debian"
